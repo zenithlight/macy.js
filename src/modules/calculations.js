@@ -1,4 +1,28 @@
 /**
+ * Return the margin for each column, based on number of columns and breakpoint
+ * @param  {Number} baseMargin   - The base margin (when there is no breakpoint set for the current screen width)
+ * @param  {Number} breakpoints  - Object containing margin in pixels for each breakpoint
+ * @return {Number}              - Resulting margin in pixels
+ */
+export function getColumnMargin (baseMargin, breakpoints) {
+  let docWidth = document.body.clientWidth;
+  let totalMargin;
+
+  for (let breakpoint in breakpoints) {
+    if (docWidth < breakpoint) {
+      totalMargin = breakpoints[breakpoint];
+      break;
+    }
+  }
+
+  if (!totalMargin) {
+    totalMargin = baseMargin;
+  }
+
+  return totalMargin;
+}
+
+/**
  * Return the current number of columns macy should be
  * @param  {Object} options - Macy instance's options
  * @return {Integer}        - Number of columns
@@ -29,7 +53,8 @@ export function getCurrentColumns (options) {
  */
 export function getWidths (options, marginsIncluded = true) {
   let noOfColumns = getCurrentColumns(options);
-  let margins;
+  let columnMargin = getColumnMargin(options.margin, options.marginBreakpoints);
+  let margin = (noOfColumns - 1) * columnMargin / noOfColumns;
   let width = 100 / noOfColumns;
 
   if (!marginsIncluded) {
@@ -40,8 +65,7 @@ export function getWidths (options, marginsIncluded = true) {
     return '100%';
   }
 
-  margins = (noOfColumns - 1) * options.margin / noOfColumns;
-  return `calc(${width}% - ${margins}px)`;
+  return `calc(${width}% - ${margin}px)`;
 };
 
 /**
@@ -53,7 +77,8 @@ export function getWidths (options, marginsIncluded = true) {
 export function getLeftPosition (ctx, col) {
   let noOfColumns = getCurrentColumns(ctx.options);
   let totalLeft = 0;
-  let margin, str;
+  let columnMargin = getColumnMargin(ctx.options.margin, ctx.options.marginBreakpoints);
+  let str;
 
   col++;
 
@@ -61,7 +86,7 @@ export function getLeftPosition (ctx, col) {
     return 0;
   }
 
-  margin = (ctx.options.margin - (noOfColumns - 1) * ctx.options.margin / noOfColumns) * (col - 1);
+  let margin = (columnMargin - (noOfColumns - 1) * columnMargin / noOfColumns) * (col - 1);
   totalLeft += getWidths(ctx.options, false) * (col - 1);
   str = 'calc(' + totalLeft + '% + ' + margin + 'px)';
 
